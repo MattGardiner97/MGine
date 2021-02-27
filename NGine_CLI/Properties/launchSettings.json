@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NGine_CLI": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
