@@ -17,6 +17,8 @@ using MGine.Components;
 using MGine.Shaders;
 using MGine.Materials;
 using MGine.Factories;
+using Buffer = SharpDX.Direct3D11.Buffer;
+using MGine.Utilities;
 
 namespace MGine.Core
 {
@@ -30,6 +32,11 @@ namespace MGine.Core
         private DeviceContext deviceContext;
         private RenderTargetView renderTargetView;
         private Texture2D backBuffer;
+        private Viewport viewport;
+        private Texture2D depthBuffer;
+        private DepthStencilView depthStencilView;
+        
+        private Buffer wvpConstantBuffer;
 
         private RenderForm renderForm;
 
@@ -45,7 +52,7 @@ namespace MGine.Core
             this.engine = Engine;
             this.width = Width;
             this.height = Height;
-            this.aspectRatio = width / height;
+            this.aspectRatio = (float)width / height;
 
             renderForm = new RenderForm()
             {
@@ -70,9 +77,39 @@ namespace MGine.Core
 
             swapChain.GetParent<Factory>().MakeWindowAssociation(renderForm.Handle, WindowAssociationFlags.IgnoreAll);
 
-            this.backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain,0);
+            this.backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0);
             renderTargetView = new RenderTargetView(device, backBuffer);
 
+            deviceContext.OutputMerger.SetRenderTargets(renderTargetView);
+
+            viewport = new Viewport(0, 0, width, height);
+            deviceContext.Rasterizer.SetViewport(viewport);
+
+            wvpConstantBuffer = new Buffer(
+                this.device,
+                SharpDX.Utilities.SizeOf<Matrix4x4>(),
+                ResourceUsage.Default,
+                BindFlags.ConstantBuffer,
+                CpuAccessFlags.None,
+                ResourceOptionFlags.None,
+                SharpDX.Utilities.SizeOf<Matrix4x4>());
+
+
+            depthBuffer = new Texture2D(device, new Texture2DDescription()
+            {
+                Format = Format.D32_Float_S8X24_UInt,
+                ArraySize = 1,
+                MipLevels = 1,
+                Width = renderForm.ClientSize.Width,
+                Height = renderForm.ClientSize.Height,
+                SampleDescription = new SampleDescription(1, 0),
+                Usage = ResourceUsage.Default,
+                BindFlags = BindFlags.DepthStencil,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.None
+            });
+            depthStencilView = new DepthStencilView(device, depthBuffer);
+            deviceContext.OutputMerger.SetTargets(depthStencilView, renderTargetView);
 
             renderForm.Show();
             RegisterServices();
@@ -88,7 +125,8 @@ namespace MGine.Core
                 ModeDescription = new ModeDescription(width, height, new Rational(60, 1), Format.R8G8B8A8_UNorm),
                 OutputHandle = renderForm.Handle,
                 SampleDescription = new SampleDescription(1, 0),
-                SwapEffect = SwapEffect.Discard
+                SwapEffect = SwapEffect.Discard,
+                Usage = Usage.RenderTargetOutput
             };
 
             this.device = null;
@@ -108,30 +146,34 @@ namespace MGine.Core
             deviceContext.ClearRenderTargetView(renderTargetView, Color.Blue);
 
             Transform cameraTransform = engine.MainCamera.Transform;
-            viewMatrix = Matrix4x4.CreateLookAt(cameraTransform.WorldPosition, cameraTransform.Forward, Vector3.UnitY);
-            projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(90, aspectRatio, 0, 1);
+            viewMatrix = Matrix4x4.CreateLookAt(cameraTransform.WorldPosition, -cameraTransform.Forward + cameraTransform.WorldPosition, Vector3.UnitY);
+            projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView((float)((Math.PI/4)), aspectRatio, float.Epsilon, 1);
             foreach(Material material in engine.MaterialRendererGroupings.Keys)
             {
+                deviceContext.InputAssembler.InputLayout = material.Shader.InputLayout;
+                deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
+                deviceContext.VertexShader.SetConstantBuffer(0, wvpConstantBuffer);
                 deviceContext.VertexShader.Set(material.Shader.VertexShader);
                 deviceContext.PixelShader.Set(material.Shader.PixelShader);
 
                 IEnumerable<MeshRenderer> meshRenderers = engine.MaterialRendererGroupings[material];
                 foreach(MeshRenderer renderer in meshRenderers)
                 {
+                    Matrix4x4 wvpMatrix = Matrix4x4.Identity * renderer.GameObject.Transform.WorldMatrix * (viewMatrix * projectionMatrix);
+                    wvpMatrix = wvpMatrix.Transpose();
+                    deviceContext.UpdateSubresource(ref wvpMatrix, wvpConstantBuffer);
+
                     deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding()
                     {
                         Buffer = renderer.Mesh.VertexBuffer,
                         Offset = 0,
                         Stride = material.Shader.InputElementStride
                     });
+
+                    deviceContext.Draw(renderer.Mesh.Vertices.Length,0);
                 }
             }
             swapChain.Present(1, PresentFlags.None);
-        }
-
-        public void EndRender()
-        {
-            swapChain.Present(1, 0);
         }
 
     }

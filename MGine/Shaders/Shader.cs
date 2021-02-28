@@ -13,7 +13,7 @@ using MGine.Core;
 
 namespace MGine.Shaders
 {
-    public class Shader : IDisposable
+    public abstract class Shader : IDisposable
     {
         private Engine engine;
 
@@ -48,7 +48,7 @@ namespace MGine.Shaders
 
         private CompilationResult CompileVertexShader(string Filename, string EntryPoint)
         {
-            string path = System.IO.Path.Join(new string[] { AppContext.BaseDirectory, "Shaders", Filename });
+            string path = System.IO.Path.Join(new string[] { engine.GetService<Settings>().ShaderDirectory, Filename });
 #if DEBUG
             return SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(path, EntryPoint, "vs_5_0",ShaderFlags.Debug);
 #else
@@ -58,7 +58,7 @@ namespace MGine.Shaders
 
         private CompilationResult CompilePixelShader(string Filename, string EntryPoint)
         {
-            string path = System.IO.Path.Join(new string[] { AppContext.BaseDirectory, "Shaders", Filename });
+            string path = System.IO.Path.Join(new string[] { engine.GetService<Settings>().ShaderDirectory, Filename });
 #if DEBUG
             return SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(path, EntryPoint, "ps_5_0",ShaderFlags.Debug);
 #else
@@ -66,7 +66,7 @@ namespace MGine.Shaders
 #endif
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             VertexShader?.Dispose();
             PixelShader?.Dispose();

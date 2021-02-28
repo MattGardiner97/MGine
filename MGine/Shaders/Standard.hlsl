@@ -1,14 +1,21 @@
-﻿struct PSInput
+﻿cbuffer objectCb {
+	matrix worldViewProj;
+};
+
+struct VSInput {
+	float4 position : POSITION;
+};
+
+struct PSInput
 {
 	float4 position : SV_POSITION;
 	float4 color : COLOR;
 };
 
-PSInput VSMain(float4 position : POSITION)
+PSInput VSMain(VSInput input)
 {
-	PSInput result;
-
-	result.position = position;
+	PSInput result = (PSInput)0;
+	result.position = mul(input.position,worldViewProj);
 	result.color = float4(1,0,0,1);
 
 	return result;

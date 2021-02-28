@@ -13,12 +13,12 @@ namespace MGine.Structures
 {
     public class Mesh
     {
-        private Vector3[] vertices = new Vector3[0];
+        private Vector4[] vertices = new Vector4[0];
         private Engine engine;
 
         public Buffer VertexBuffer { get; private set; }
 
-        public Vector3[] Vertices
+        public Vector4[] Vertices
         {
             get { return vertices; }
             set { vertices = value; Rebuild(); }

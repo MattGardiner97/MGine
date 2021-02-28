@@ -29,7 +29,7 @@ namespace MGine.Shaders
 
         public void RegisterShaderDefinition<TShader,TShaderDefinition>() where TShader: Shader where TShaderDefinition : IShaderDefinition
         {
-            if (shaders.ContainsKey(typeof(TShaderDefinition)))
+            if (shaders.ContainsKey(typeof(TShader)))
                 return;
 
             var shaderDefinition = Activator.CreateInstance<TShaderDefinition>();
@@ -39,7 +39,7 @@ namespace MGine.Shaders
             AllShaders = new ReadOnlyCollection<Shader>(shaders.Values.ToArray());
         }
 
-        public TShader GetShaderByDefintion<TShader>() where TShader : Shader
+        public TShader GetShader<TShader>() where TShader : Shader
         {
             if (shaders.ContainsKey(typeof(TShader)) == false)
                 return null;

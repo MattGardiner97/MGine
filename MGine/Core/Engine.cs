@@ -25,12 +25,14 @@ namespace MGine.Core
         //Service references
         private Graphics graphics;
         private Time time;
+        private Settings settings;
 
         public bool IsInitialised { get; private set; } = false;
 
-        public Engine()
+        public Engine(Settings Settings)
         {
-            RegisterDefaultService();
+            this.settings = Settings;
+            RegisterDefaultServices();
         }
 
         public TService RegisterService<TService>()
@@ -52,7 +54,7 @@ namespace MGine.Core
         public TService RegisterService<TService>(TService Service)
         {
             if (services.ContainsKey(typeof(TService)))
-                throw new ArgumentOutOfRangeException($"{typeof(TService).FullName} has not been registered.");
+                throw new ArgumentOutOfRangeException($"{typeof(TService).FullName} has already been registered.");
 
             services.Add(typeof(TService), Service);
 
@@ -67,8 +69,9 @@ namespace MGine.Core
             return (TService)services[typeof(TService)];
         }
 
-        private void RegisterDefaultService()
+        private void RegisterDefaultServices()
         {
+            RegisterService(settings);
             this.graphics = RegisterService(new Graphics(this, 800, 600));
             this.time = RegisterService<Time>();
             RegisterService<ShaderManager>();
@@ -127,7 +130,6 @@ namespace MGine.Core
         public void Render()
         {
             graphics.Render();
-            graphics.EndRender();
         }
 
         public GameObject CreateGameObject()

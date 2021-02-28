@@ -16,14 +16,22 @@ namespace NGine_CLI
     {
         static void Main(string[] args)
         {
-            Engine engine = new Engine();
+            Settings settings = new Settings()
+            {
+                ShaderDirectory = @"C:\Users\Matt\Source\Repos\MGine\MGine\Shaders"
+            };
+
+            Engine engine = new Engine(settings);
             engine.Initialise();
 
             GameObject gObject = engine.CreateGameObject();
+            gObject.Transform.LocalPosition = new Vector3(0, 0, 0f);
             MeshRenderer mr = gObject.AddComponent<MeshRenderer>();
             mr.Mesh = engine.GetService<PrimitiveMeshFactory>().CreateCube();
             StandardMaterial standardMaterial = new StandardMaterial(engine);
             mr.Material = standardMaterial;
+
+            engine.MainCamera.Transform.LocalPosition = new Vector3(0, 0, -5f);
 
             engine.Run();
         }

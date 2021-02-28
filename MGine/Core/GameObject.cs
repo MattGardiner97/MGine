@@ -32,7 +32,7 @@ namespace MGine.Core
             if (components.ContainsKey(typeof(TComponent)))
                 return default(TComponent);
 
-            var newComponent = (TComponent)Activator.CreateInstance(typeof(TComponent),new object[] { engine });
+            var newComponent = (TComponent)Activator.CreateInstance(typeof(TComponent),new object[] { this, engine});
             components.Add(typeof(TComponent), newComponent);
             return newComponent;
         }

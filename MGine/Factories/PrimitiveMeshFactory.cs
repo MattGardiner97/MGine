@@ -20,17 +20,21 @@ namespace MGine.Factories
 
         public Mesh CreateCube()
         {
-            Vector3[] points = new Vector3[]
+            Vector4[] points = new Vector4[]
             {
-                new Vector3(-0.5f,-0.5f,-0.5f), //Rear Bottom left
-                new Vector3(-0.5f,-0.5f,0.5f), //Front bottom left
-                new Vector3(0.5f,-0.5f,0.5f), //Front bottom right
-                new Vector3(0.5f,-0.5f,-0.5f), //Rear bottom right
+                new Vector4(-0.5f,0,0,1),
+                new Vector4(0,0.5f,0,1),
+                new Vector4(0.5f,0,0,1)
 
-                new Vector3(-0.5f,0.5f,-0.5f), //Rear top left
-                new Vector3(-0.5f,0.5f,0.5f), //Front top left
-                new Vector3(0.5f,0.5f,0.5f), //Front top right
-                new Vector3(0.5f,0.5f,-0.5f)
+                //new Vector3(-0.5f,-0.5f,-0.5f), //Rear Bottom left
+                //new Vector3(-0.5f,-0.5f,0.5f), //Front bottom left
+                //new Vector3(0.5f,-0.5f,0.5f), //Front bottom right
+                //new Vector3(0.5f,-0.5f,-0.5f), //Rear bottom right
+
+                //new Vector3(-0.5f,0.5f,-0.5f), //Rear top left
+                //new Vector3(-0.5f,0.5f,0.5f), //Front top left
+                //new Vector3(0.5f,0.5f,0.5f), //Front top right
+                //new Vector3(0.5f,0.5f,-0.5f) //Front rear right
             };
 
             Mesh result = new Mesh(engine)

@@ -11,13 +11,13 @@ namespace MGine.Materials
 {
     public class StandardMaterial : Material
     {
-        private StandardShader shader;
+        //private StandardShader shader;
 
         public Vector4 Color { get; set; }
 
         public StandardMaterial(Engine Engine) : base(Engine)
         {
-            shader = Engine.GetService<ShaderManager>().GetShaderByDefintion<StandardShader>();
+            Shader = Engine.GetService<ShaderManager>().GetShader<StandardShader>();
         }
     }
 }

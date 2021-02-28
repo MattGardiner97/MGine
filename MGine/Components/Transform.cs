@@ -9,13 +9,13 @@ namespace MGine.Components
 {
     public class Transform
     {
-        private Transform transform;
+        private Transform parent;
         private Vector3 localPosition;
         private Quaternion rotation;
-        private Vector3 scale;
+        private Vector3 scale = Vector3.One;
 
-        public Transform Parent { get { return transform; } set { transform = value; RecalculateWorld(); } }
-        public Vector3 LocalPosition { get { return LocalPosition; } set { localPosition = value;RecalculateWorld(); } }
+        public Transform Parent { get { return parent; } set { parent = value; RecalculateWorld(); } }
+        public Vector3 LocalPosition { get { return localPosition; } set { localPosition = value;RecalculateWorld(); } }
         public Vector3 WorldPosition
         {
             get
@@ -39,7 +39,7 @@ namespace MGine.Components
 
         public Transform()
         {
-            this.Parent = Parent;
+            RecalculateWorld();
         }
 
         private void RecalculateWorld()

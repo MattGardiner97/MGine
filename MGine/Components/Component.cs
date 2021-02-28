@@ -11,8 +11,8 @@ namespace MGine.Components
     {
         protected Engine engine;
 
-        public GameObject Parent { get; private set; }
-        public Transform Transform { get { return Parent.Transform; } }
+        public GameObject GameObject { get; private set; }
+        public Transform Transform { get { return GameObject.Transform; } }
         public bool Active { get; set; } = true;
 
         public void Update() { }
@@ -20,7 +20,7 @@ namespace MGine.Components
 
         public Component(GameObject Parent, Engine Engine)
         {
-            this.Parent = Parent;
+            this.GameObject = Parent;
             this.engine = Engine;
         }
     }
