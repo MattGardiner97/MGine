@@ -10,12 +10,13 @@ using SharpDX.D3DCompiler;
 using Device = SharpDX.Direct3D11.Device;
 using SharpDX.Direct3D11;
 using MGine.Core;
+using MGine.Exceptions;
 
 namespace MGine.Shaders
 {
     public abstract class Shader : IDisposable
     {
-        private Engine engine;
+        protected Engine engine;
 
         public InputLayout InputLayout { get; private set; }
         public int InputElementStride { get; private set; }
@@ -24,6 +25,9 @@ namespace MGine.Shaders
 
         public CompilationResult VertexShaderCompilationResult { get; private set; }
         public CompilationResult PixelShaderCompilationResult { get; private set; }
+
+        public abstract void BeginRender(RenderService RenderService);
+        public abstract void Init();
 
         public Shader(IShaderDefinition ShaderDefinition, Engine Engine)
         {
@@ -37,20 +41,20 @@ namespace MGine.Shaders
             if (PixelShaderCompilationResult.HasErrors)
                 throw new ShaderCompilationException(PixelShaderCompilationResult.Message);
 
-            this.VertexShader = new VertexShader(engine.GetService<Device>(), VertexShaderCompilationResult.Bytecode);
-            this.PixelShader = new PixelShader(engine.GetService<Device>(), PixelShaderCompilationResult.Bytecode);
+            this.VertexShader = new VertexShader(engine.GraphicsServices.GetService<Device>(), VertexShaderCompilationResult.Bytecode);
+            this.PixelShader = new PixelShader(engine.GraphicsServices.GetService<Device>(), PixelShaderCompilationResult.Bytecode);
             InputLayout = new InputLayout(
-                engine.GetService<Device>(), 
-                ShaderSignature.GetInputSignature(VertexShaderCompilationResult.Bytecode), 
+                engine.GraphicsServices.GetService<Device>(),
+                ShaderSignature.GetInputSignature(VertexShaderCompilationResult.Bytecode),
                 ShaderDefinition.GetInputElements());
             this.InputElementStride = ShaderDefinition.GetInputElementStride();
         }
 
         private CompilationResult CompileVertexShader(string Filename, string EntryPoint)
         {
-            string path = System.IO.Path.Join(new string[] { engine.GetService<Settings>().ShaderDirectory, Filename });
+            string path = System.IO.Path.Join(new string[] { engine.Services.GetService<Settings>().ShaderDirectory, Filename });
 #if DEBUG
-            return SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(path, EntryPoint, "vs_5_0",ShaderFlags.Debug);
+            return SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(path, EntryPoint, "vs_5_0", ShaderFlags.Debug);
 #else
             return SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(path, EntryPoint, "vs_5_0");
 #endif
@@ -58,9 +62,9 @@ namespace MGine.Shaders
 
         private CompilationResult CompilePixelShader(string Filename, string EntryPoint)
         {
-            string path = System.IO.Path.Join(new string[] { engine.GetService<Settings>().ShaderDirectory, Filename });
+            string path = System.IO.Path.Join(new string[] { engine.Services.GetService<Settings>().ShaderDirectory, Filename });
 #if DEBUG
-            return SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(path, EntryPoint, "ps_5_0",ShaderFlags.Debug);
+            return SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(path, EntryPoint, "ps_5_0", ShaderFlags.Debug);
 #else
             return SharpDX.D3DCompiler.ShaderBytecode.CompileFromFile(path, EntryPoint,"ps_5_0");
 #endif

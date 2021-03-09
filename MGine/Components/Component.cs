@@ -15,13 +15,19 @@ namespace MGine.Components
         public Transform Transform { get { return GameObject.Transform; } }
         public bool Active { get; set; } = true;
 
-        public void Update() { }
-        public void Render() { }
+        protected Time Time { get; private set; }
+        protected Input Input { get; private set; }
+
+        public virtual void Start() { }
+        public virtual void Update() { }
+        public virtual void Render() { }
 
         public Component(GameObject Parent, Engine Engine)
         {
             this.GameObject = Parent;
             this.engine = Engine;
+            this.Time = engine.Services.GetService<Time>();
+            this.Input = engine.Services.GetService<Input>();
         }
     }
 }

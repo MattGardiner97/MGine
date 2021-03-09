@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MGine.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,15 +7,18 @@ using System.Threading.Tasks;
 
 namespace MGine.Core
 {
-    public class Time
+    public class Time : IService
     {
         private DateTime lastUpdate = DateTime.Now;
 
-        public double DeltaTime { get; private set; }
+        public float DeltaTime { get; private set; }
+
+        public void Dispose() { }
+        public void Init() { }
 
         public void EarlyUpdate()
         {
-            DeltaTime = (DateTime.Now - lastUpdate).TotalSeconds;
+            DeltaTime = (float)(DateTime.Now - lastUpdate).TotalSeconds;
         }
 
         public void LateUpdate()

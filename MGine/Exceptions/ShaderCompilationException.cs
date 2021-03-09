@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MGine.Shaders
+namespace MGine.Exceptions
 {
     public class ShaderCompilationException : Exception
     {

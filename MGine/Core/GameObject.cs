@@ -12,6 +12,7 @@ namespace MGine.Core
         private Engine engine;
         private Dictionary<Type, Component> components;
 
+        public string Name { get; set; }
         public Transform Transform { get; private set; }
 
         internal GameObject(Engine Engine)
@@ -24,7 +25,11 @@ namespace MGine.Core
 
         public void Update()
         {
+            foreach(Component comp in components.Values)
+            {
+                comp.Update();
 
+            }
         }
 
         public TComponent AddComponent<TComponent>() where TComponent : Component
@@ -34,6 +39,9 @@ namespace MGine.Core
 
             var newComponent = (TComponent)Activator.CreateInstance(typeof(TComponent),new object[] { this, engine});
             components.Add(typeof(TComponent), newComponent);
+
+            newComponent.Start();
+
             return newComponent;
         }
 

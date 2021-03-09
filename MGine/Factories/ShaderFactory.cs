@@ -1,5 +1,7 @@
 ﻿using MGine.Core;
+using MGine.Interfaces;
 using MGine.ShaderDefinitions;
+using MGine.Shaders;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,9 +9,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MGine.Shaders
+namespace MGine.Factories
 {
-    public class ShaderManager
+    public class ShaderFactory : IService
     {
         private Engine engine;
 
@@ -17,12 +19,12 @@ namespace MGine.Shaders
 
         public IReadOnlyList<Shader> AllShaders { get; private set; }
 
-        public ShaderManager(Engine Engine)
+        public ShaderFactory(Engine Engine)
         {
             this.engine = Engine;
         }
 
-        public void RegisterDefaultShaders()
+        public void Init()
         {
             RegisterShaderDefinition<StandardShader,StandardShaderDefinition>();
         }
@@ -34,8 +36,9 @@ namespace MGine.Shaders
 
             var shaderDefinition = Activator.CreateInstance<TShaderDefinition>();
             var newShader = (TShader)Activator.CreateInstance(typeof(TShader),new object[] { shaderDefinition, engine });
-            shaders.Add(typeof(TShader), newShader);
+            newShader.Init();
 
+            shaders.Add(typeof(TShader), newShader);
             AllShaders = new ReadOnlyCollection<Shader>(shaders.Values.ToArray());
         }
 
@@ -47,5 +50,10 @@ namespace MGine.Shaders
             return (TShader)shaders[typeof(TShader)];
         }
 
+        public void Dispose()
+        {
+            foreach (var shader in shaders.Values)
+                shader.Dispose();
+        }
     }
 }

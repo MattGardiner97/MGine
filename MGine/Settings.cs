@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MGine.Interfaces;
 
 namespace MGine
 {
-    public class Settings
+    public class Settings : IService
     {
         public string ShaderDirectory { get; set; }
 
@@ -15,5 +16,8 @@ namespace MGine
         {
             ShaderDirectory = Path.Join(AppContext.BaseDirectory, "Shaders");
         }
+
+        public void Init() { }
+        public void Dispose() { }
     }
 }

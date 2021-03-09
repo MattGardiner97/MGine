@@ -1,4 +1,6 @@
 ﻿using MGine.Components;
+using MGine.Factories;
+using MGine.Interfaces;
 using MGine.Materials;
 using MGine.Shaders;
 using MGine.Structures;
@@ -14,67 +16,41 @@ namespace MGine.Core
 {
     public class Engine
     {
-        private Dictionary<Type, object> services = new Dictionary<Type, object>();
-        private List<GameObject> gameObjects = new List<GameObject>();
-
-        public Grouping<Shader, Material> ShaderMaterialGroupings { get; private set; } = new Grouping<Shader, Material>();
-        public Grouping<Material, MeshRenderer> MaterialRendererGroupings { get; private set; } = new Grouping<Material, MeshRenderer>();
-
-        public Camera MainCamera { get; set; }
-
         //Service references
         private Graphics graphics;
         private Time time;
         private Settings settings;
+        private Input input;
 
+        private List<GameObject> gameObjects = new List<GameObject>();
+
+        public ServiceManager<IService> Services { get; private set; }
+        public ServiceManager<IDisposable> GraphicsServices { get; private set; }
+        public Grouping<Shader, Material> ShaderMaterialGroupings { get; private set; } = new Grouping<Shader, Material>();
+        public Grouping<Material, MeshRenderer> MaterialRendererGroupings { get; private set; } = new Grouping<Material, MeshRenderer>();
+
+        public Camera MainCamera { get; set; }
         public bool IsInitialised { get; private set; } = false;
 
         public Engine(Settings Settings)
         {
+            this.Services = new ServiceManager<IService>(this);
+            this.GraphicsServices = new ServiceManager<IDisposable>(this);
+
             this.settings = Settings;
             RegisterDefaultServices();
         }
 
-        public TService RegisterService<TService>()
-        {
-            if (services.ContainsKey(typeof(TService)))
-                return default(TService);
-
-            TService service;
-            if (typeof(TService).GetConstructor(new Type[] { typeof(Engine) }) != null)
-                service = (TService)Activator.CreateInstance(typeof(TService), new object[] { this });
-            else
-                service = Activator.CreateInstance<TService>();
-
-            services.Add(typeof(TService), service);
-
-            return service;
-        }
-
-        public TService RegisterService<TService>(TService Service)
-        {
-            if (services.ContainsKey(typeof(TService)))
-                throw new ArgumentOutOfRangeException($"{typeof(TService).FullName} has already been registered.");
-
-            services.Add(typeof(TService), Service);
-
-            return Service;
-        }
-
-        public TService GetService<TService>()
-        {
-            if (services.ContainsKey(typeof(TService)) == false)
-                throw new ArgumentOutOfRangeException($"{typeof(TService).FullName} has not been registered.");
-
-            return (TService)services[typeof(TService)];
-        }
-
         private void RegisterDefaultServices()
         {
-            RegisterService(settings);
-            this.graphics = RegisterService(new Graphics(this, 800, 600));
-            this.time = RegisterService<Time>();
-            RegisterService<ShaderManager>();
+            Services.RegisterService(settings);
+            this.graphics = Services.RegisterService(new Graphics(this, 800, 600));
+            this.time = Services.RegisterService<Time>();
+            this.input = Services.RegisterService<Input>();
+            Services.RegisterService<PrimitiveMeshFactory>();
+            Services.RegisterService<ShaderFactory>();
+            Services.RegisterService<MaterialFactory>();
+            Services.RegisterService<TextureFactory>();
         }
 
         public void RegisterShaderMaterialGrouping(Shader OldShader, Shader NewShader, Material Material)
@@ -92,13 +68,20 @@ namespace MGine.Core
 
         public void Initialise()
         {
-            GetService<Graphics>().Init();
-            GetService<ShaderManager>().RegisterDefaultShaders();
+            Services.ForAll(service => service.Init());
 
             GameObject cameraObject = this.CreateGameObject();
             this.MainCamera = cameraObject.AddComponent<Camera>();
 
+            GraphicsServices.GetService<RenderForm>().FormClosed += (_, __) => this.Dispose();
+
             this.IsInitialised = true;
+        }
+
+        public void Dispose()
+        {
+            Services.ForAll(service => service.Dispose());
+
         }
 
         public void Run()
@@ -106,25 +89,24 @@ namespace MGine.Core
             if (this.IsInitialised == false)
                 throw new InvalidOperationException("Engine not initialised.");
 
-            using (var renderLoop = new RenderLoop(GetService<RenderForm>()))
-            {
-                while (renderLoop.NextFrame())
-                {
-                    this.Update();
-                    this.Render();
-                }
-            }
+            RenderLoop.Run(GraphicsServices.GetService<RenderForm>(), () =>
+             {
+                 this.Update();
+                 this.Render();
+             });
         }
 
         private void Update()
         {
             time.EarlyUpdate();
-            GetService<RenderForm>().Text = $"{1 / time.DeltaTime}";
+            input.EarlyUpdate();
+
             foreach (GameObject gameObject in gameObjects)
-            {
                 gameObject.Update();
-            }
+
+
             time.LateUpdate();
+            input.LateUpdate();
         }
 
         public void Render()
@@ -134,9 +116,24 @@ namespace MGine.Core
 
         public GameObject CreateGameObject()
         {
+            return CreateGameObject(string.Empty);
+        }
+
+        public GameObject CreateGameObject(string Name)
+        {
             GameObject gameObject = new GameObject(this);
+            gameObject.Name = Name;
             gameObjects.Add(gameObject);
             return gameObject;
+        }
+
+        public GameObject FindGameObjectByName(string Name)
+        {
+            for (int i = 0; i < gameObjects.Count; i++)
+                if (gameObjects[i].Name == Name)
+                    return gameObjects[i];
+
+            return null;
         }
     }
 }

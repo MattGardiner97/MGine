@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace MGine.Materials
 {
-    public class Material
+    public abstract class Material : IDisposable
     {
-        private Engine engine;
+        protected Engine engine;
         private Shader shader;
 
         public Shader Shader
@@ -31,6 +31,10 @@ namespace MGine.Materials
         {
             this.engine = Engine;
         }
+
+        public abstract void Init();
+        public abstract void BeginRender(RenderService RenderService);
+        public abstract void Dispose();
 
     }
 }

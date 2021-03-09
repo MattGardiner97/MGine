@@ -3,21 +3,44 @@ using MGine.Shaders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
+using SharpDX;
 using System.Text;
 using System.Threading.Tasks;
+using Buffer = SharpDX.Direct3D11.Buffer;
+using SharpDX.Direct3D11;
+using MGine.Factories;
 
 namespace MGine.Materials
 {
     public class StandardMaterial : Material
     {
-        //private StandardShader shader;
+        private Vector4 colour;
 
-        public Vector4 Color { get; set; }
+        public Vector4 Colour
+        {
+            get { return colour; }
+            set { colour = value; }
+        }
 
         public StandardMaterial(Engine Engine) : base(Engine)
         {
-            Shader = Engine.GetService<ShaderManager>().GetShader<StandardShader>();
+            Shader = engine.Services.GetService<ShaderFactory>().GetShader<StandardShader>();
+        }
+
+        public override void BeginRender(RenderService RenderService)
+        {
+                Vector4 colour = this.colour;
+                RenderService.UpdateSubresource(ref colour, 2);
+        }
+
+        public override void Dispose()
+        {
+            
+        }
+
+        public override void Init()
+        {
+            
         }
     }
 }

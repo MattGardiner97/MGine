@@ -9,15 +9,23 @@
     <PackageReference Include="SharpDX" Version="4.2.0" />
     <PackageReference Include="SharpDX.D3DCompiler" Version="4.2.0" />
     <PackageReference Include="SharpDX.Desktop" Version="4.2.0" />
+    <PackageReference Include="SharpDX.Direct2D1" Version="4.2.0" />
     <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
+    <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
     <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
     <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
+    <PackageReference Include="SharpDX.RawInput" Version="4.2.0" />
+    <PackageReference Include="SharpDX.XInput" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Shaders\Standard.hlsl">
+    <None Update="HLSL\Standard.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utilities\" />
   </ItemGroup>
 
 </Project>

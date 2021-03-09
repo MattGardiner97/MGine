@@ -9,6 +9,8 @@
   <ItemGroup>
     <PackageReference Include="SharpDX" Version="4.2.0" />
     <PackageReference Include="SharpDX.Desktop" Version="4.2.0" />
+    <PackageReference Include="SharpDX.XInput" Version="4.2.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>

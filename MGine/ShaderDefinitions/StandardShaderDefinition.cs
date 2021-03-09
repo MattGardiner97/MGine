@@ -14,7 +14,8 @@ namespace MGine.ShaderDefinitions
         {
             return new InputElement[]
             {
-                new InputElement("POSITION",0,Format.R32G32B32A32_Float,0,0)
+                new InputElement("POSITION",0,Format.R32G32B32A32_Float,0,0),
+                new InputElement("NORMAL",0,Format.R32G32B32_Float,16,0,InputClassification.PerVertexData,0)
             };
         }
 
@@ -30,7 +31,7 @@ namespace MGine.ShaderDefinitions
 
         public int GetInputElementStride()
         {
-            return 16;
+            return 28;
         }
     }
 }
