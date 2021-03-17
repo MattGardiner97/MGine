@@ -51,6 +51,7 @@ namespace MGine.Core
             Services.RegisterService<ShaderFactory>();
             Services.RegisterService<MaterialFactory>();
             Services.RegisterService<TextureFactory>();
+            Services.RegisterService<BufferFactory>();
         }
 
         public void RegisterShaderMaterialGrouping(Shader OldShader, Shader NewShader, Material Material)

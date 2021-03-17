@@ -10,7 +10,7 @@ namespace MGine.Shaders
 {
     public class TextureShader : Shader
     {
-        public TextureShader(IShaderDefinition ShaderDefinition, Engine Engine) : base(ShaderDefinition, Engine)
+        public TextureShader(ShaderDefinition ShaderDefinition, Engine Engine) : base(ShaderDefinition, Engine)
         {
         }
 
@@ -19,7 +19,7 @@ namespace MGine.Shaders
             throw new NotImplementedException();
         }
 
-        public override void Init()
+        public override void Init(RenderService RenderService)
         {
             throw new NotImplementedException();
         }

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace MGine.ShaderDefinitions
 {
-    public class TextureShaderDefinition : IShaderDefinition
+    public class TextureShaderDefinition : ShaderDefinition
     {
-        public InputElement[] GetInputElements()
+        public override InputElement[] GetInputElements()
         {
             return new InputElement[]
             {
@@ -19,17 +19,12 @@ namespace MGine.ShaderDefinitions
             };
         }
 
-        public int GetInputElementStride()
-        {
-            return 36;
-        }
-
-        public (string Filename, string EntryPoint) GetPixelShaderDetails()
+        public override (string Filename, string EntryPoint) GetPixelShaderDetails()
         {
             return ("Texture.hlsl", "PSMain");
         }
 
-        public (string Filename, string EntryPoint) GetVertexShaderDetails()
+        public override (string Filename, string EntryPoint) GetVertexShaderDetails()
         {
             return ("Texture.hlsl", "VSMain");
         }

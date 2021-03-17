@@ -8,10 +8,12 @@ using System.Threading.Tasks;
 
 namespace MGine.ShaderDefinitions
 {
-    public class StandardShaderDefinition : ShaderDefinition
+    public class ShadowShaderDefinition : ShaderDefinition
     {
         public override InputElement[] GetInputElements()
         {
+            throw new Exception();
+
             return new InputElement[]
             {
                 new InputElement("POSITION",0,Format.R32G32B32A32_Float,0,0),

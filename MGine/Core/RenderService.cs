@@ -1,4 +1,5 @@
-﻿using MGine.Shaders;
+﻿using MGine.Enum;
+using MGine.Shaders;
 using SharpDX;
 using SharpDX.Direct3D11;
 using System;
@@ -15,7 +16,7 @@ namespace MGine.Core
         private Engine engine;
         private DeviceContext deviceContext;
 
-        private Buffer[] currentBuffersInSlots = new Buffer[10]; //Index 0 = Buffer Slot 1
+        private Dictionary<string, (Buffer Buffer, ConstantBufferType Type)> constantBuffers = new Dictionary<string, (Buffer, ConstantBufferType)>();
 
         public Matrix WorldViewProjectionMatrix { get; set; }
 
@@ -38,30 +39,33 @@ namespace MGine.Core
             deviceContext.PixelShader.Set(Shader.PixelShader);
         }
 
-        public void UpdateSubresource<T>(ref T Data, int VertexShaderSlot) where T : struct
+        public void RegisterConstantBuffer(string ConstantBufferName, Buffer ConstantBuffer, ConstantBufferType Type)
         {
-            if (VertexShaderSlot < 2 || VertexShaderSlot > 10)
-                throw new ArgumentException("VertexShaderSlot must be between 2 and 10 inclusive.");
-            if (currentBuffersInSlots[VertexShaderSlot - 2] == null)
-                throw new ArgumentNullException($"No Buffers are bound in slot {VertexShaderSlot}.");
+            if (constantBuffers.ContainsKey(ConstantBufferName))
+                return;
 
-            Buffer buffer = currentBuffersInSlots[VertexShaderSlot -2];
-            deviceContext.UpdateSubresource(ref Data, buffer);
+            constantBuffers.Add(ConstantBufferName, (ConstantBuffer, Type));
         }
 
-        public void SetConstantBuffer(int Slot, Buffer ConstantBuffer)
+        public void UpdateConstantBuffer<T>(string ConstantBufferName, ref T Data) where T : struct
         {
-            if (Slot < 2)
-            {
-                if (Slot >= 0)
-                    throw new ArgumentException("Slot 0 and 1 are reserved.");
-                else
-                    throw new ArgumentException("Slot must be greater than 0.");
-            }
+            if (constantBuffers.ContainsKey(ConstantBufferName) == false)
+                throw new KeyNotFoundException($"Constant Buffer: {ConstantBufferName} has not been registerd.");
 
-            currentBuffersInSlots[Slot - 2] = ConstantBuffer;
-            deviceContext.VertexShader.SetConstantBuffer(Slot, ConstantBuffer);
+            Buffer cBuffer = constantBuffers[ConstantBufferName].Buffer;
+            deviceContext.UpdateSubresource(ref Data, cBuffer);
+        }
 
+        public void SetConstantBuffer(string ConstantBufferName, int Slot)
+        {
+            if (constantBuffers.ContainsKey(ConstantBufferName) == false)
+                throw new KeyNotFoundException($"Constant Buffer: {ConstantBufferName} has not been registerd.");
+
+            var cBuffer = constantBuffers[ConstantBufferName];
+            if (cBuffer.Type == ConstantBufferType.VertexShader)
+                deviceContext.VertexShader.SetConstantBuffer(Slot, cBuffer.Buffer);
+            else
+                deviceContext.PixelShader.SetConstantBuffer(Slot, cBuffer.Buffer);
         }
     }
 }

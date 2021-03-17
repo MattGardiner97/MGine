@@ -9,6 +9,12 @@ namespace MGine.Structures
 {
     public struct PerObjectCB
     {
+        public PerObjectCB(Matrix WorldViewProjection,Matrix World)
+        {
+            this.WorldViewProjection = WorldViewProjection;
+            this.World = World;
+        }
+
         public Matrix WorldViewProjection;
         public Matrix World;
     }

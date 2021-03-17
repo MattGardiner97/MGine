@@ -27,9 +27,9 @@ namespace MGine.Shaders
         public CompilationResult PixelShaderCompilationResult { get; private set; }
 
         public abstract void BeginRender(RenderService RenderService);
-        public abstract void Init();
+        public abstract void Init(RenderService RenderService);
 
-        public Shader(IShaderDefinition ShaderDefinition, Engine Engine)
+        public Shader(ShaderDefinition ShaderDefinition, Engine Engine)
         {
             this.engine = Engine;
 

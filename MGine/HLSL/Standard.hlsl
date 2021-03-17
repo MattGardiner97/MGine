@@ -18,16 +18,22 @@ struct Light
 	float4 diffuse;
 };
 
-cbuffer objectCb : register(b0) {
+cbuffer frameCb : register(b0) {
+	Light light;
+};
+
+cbuffer objectCb : register(b1) {
 	matrix worldViewProj;
 	matrix world;
 };
 
-cbuffer frameCb : register(b1) {
-	Light light;
+cbuffer lightCb : register(b2)
+{
+	float4x4 lightMatrix;
 };
 
-cbuffer colourCb : register(b2) {
+
+cbuffer colourCb : register(b3) {
 	float4 colour;
 };
 

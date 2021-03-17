@@ -30,7 +30,7 @@ namespace MGine.Materials
         public override void BeginRender(RenderService RenderService)
         {
                 Vector4 colour = this.colour;
-                RenderService.UpdateSubresource(ref colour, 2);
+                RenderService.UpdateConstantBuffer(Constants.ConstantBufferNames.COLOUR_CB,ref colour);
         }
 
         public override void Dispose()

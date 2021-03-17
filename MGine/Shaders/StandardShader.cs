@@ -16,12 +16,12 @@ namespace MGine.Shaders
     {
         private Buffer colourConstantBuffer;
 
-        public StandardShader(IShaderDefinition ShaderDefinition, Engine Engine) : base(ShaderDefinition, Engine)
+        public StandardShader(ShaderDefinition ShaderDefinition, Engine Engine) : base(ShaderDefinition, Engine)
         {
             
         }
 
-        public override void Init()
+        public override void Init(RenderService RenderService)
         {
             colourConstantBuffer = new Buffer(
                 engine.GraphicsServices.GetService<Device>(),
@@ -31,12 +31,14 @@ namespace MGine.Shaders
                 CpuAccessFlags.None,
                 ResourceOptionFlags.None,
                 SharpDX.Utilities.SizeOf<Vector4>());
+
+            RenderService.RegisterConstantBuffer(Constants.ConstantBufferNames.COLOUR_CB, colourConstantBuffer,Enum.ConstantBufferType.VertexShader);
         }
 
         public override void BeginRender(RenderService RenderService)
         {
             RenderService.SetShader(this);
-            RenderService.SetConstantBuffer(2, colourConstantBuffer);
+            RenderService.SetConstantBuffer(Constants.ConstantBufferNames.COLOUR_CB,3);
         }
 
         public override void Dispose()

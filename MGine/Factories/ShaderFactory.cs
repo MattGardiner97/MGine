@@ -29,14 +29,14 @@ namespace MGine.Factories
             RegisterShaderDefinition<StandardShader,StandardShaderDefinition>();
         }
 
-        public void RegisterShaderDefinition<TShader,TShaderDefinition>() where TShader: Shader where TShaderDefinition : IShaderDefinition
+        public void RegisterShaderDefinition<TShader,TShaderDefinition>() where TShader: Shader where TShaderDefinition : ShaderDefinition
         {
             if (shaders.ContainsKey(typeof(TShader)))
                 return;
 
             var shaderDefinition = Activator.CreateInstance<TShaderDefinition>();
             var newShader = (TShader)Activator.CreateInstance(typeof(TShader),new object[] { shaderDefinition, engine });
-            newShader.Init();
+            newShader.Init(engine.GraphicsServices.GetService<RenderService>());
 
             shaders.Add(typeof(TShader), newShader);
             AllShaders = new ReadOnlyCollection<Shader>(shaders.Values.ToArray());
