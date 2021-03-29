@@ -3,9 +3,6 @@ using MGine.Components;
 using MGine.Core;
 using MGine.Factories;
 using MGine.Materials;
-using MGine.ShaderDefinitions;
-using MGine.Shaders;
-using MGine.Structures;
 using SharpDX;
 using SharpDX.Windows;
 using System;
@@ -19,7 +16,7 @@ namespace NGine_CLI
         {
             Settings settings = new Settings()
             {
-                ShaderDirectory = @"C:\Users\Matt\Source\Repos\MGine\MGine\HLSL"
+                ShaderDirectory = @"..\..\..\..\MGine\Shaders\HLSL"
             };
 
             Engine engine = new Engine(settings);
@@ -27,17 +24,28 @@ namespace NGine_CLI
 
             engine.MainCamera.GameObject.AddComponent<CameraMovementScript>();
 
+            GameObject lightObject = engine.CreateGameObject();
+            var light = lightObject.AddComponent<DirectionalLight>();
+            light.Ambient = new Vector4(0.2f, 0.2f, 0.2f, 1);
+            light.Diffuse = new Vector4(0.7f, 0.7f, 0.7f, 1);
+            light.Specular = new Vector4(0.7f, 0.7f, 0.7f, 1);
+            light.Transform.EulerAngles = new Vector3(30, 45, 0);
+
             GameObject gObject = engine.CreateGameObject("Test");
-            gObject.Transform.LocalPosition = new Vector3(0, 0, 0f);
             MeshRenderer mr = gObject.AddComponent<MeshRenderer>();
             mr.Mesh = engine.Services.GetService<PrimitiveMeshFactory>().CreateCube();
             StandardMaterial standardMaterial = engine.Services.GetService<MaterialFactory>().GetMaterial<StandardMaterial>();
             mr.Material = standardMaterial;
-            ((StandardMaterial)mr.Material).Colour = new Vector4(1, 0, 0,1);
+            //standardMaterial.Colour = new Vector4(1, 0, 0, 1);
+            standardMaterial.Ambient = new Vector4(1, 0, 0, 1.0f);
+            standardMaterial.Diffuse = new Vector4(1, 0, 0, 1.0f);
+            standardMaterial.Specular = new Vector4(1, 0, 0, 1);
+
+            gObject.AddComponent<CubeMovementScript>();
 
             //Random r = new Random();
 
-            //for (int i = 0; i < 1; i++)
+            //for (int i = 0; i < 10; i++)
             //{
             //    GameObject gObject = engine.CreateGameObject("Test");
             //    gObject.Transform.LocalPosition = new Vector3(0, 0, 0f);
@@ -45,7 +53,7 @@ namespace NGine_CLI
             //    mr.Mesh = engine.Services.GetService<PrimitiveMeshFactory>().CreateCube();
             //    StandardMaterial standardMaterial = engine.Services.GetService<MaterialFactory>().GetMaterial<StandardMaterial>();
             //    mr.Material = standardMaterial;
-            //    switch(r.Next(0,4))
+            //    switch (r.Next(0, 4))
             //    {
             //        case 0:
             //            ((StandardMaterial)mr.Material).Colour = new Vector4(1, 0, 0, 1);
@@ -113,6 +121,37 @@ namespace NGine_CLI
         }
     }
 
+    public class CubeMovementScript : Component
+    {
+        private float step = 1f;
+
+        public CubeMovementScript(GameObject Parent, Engine Engine) : base(Parent, Engine)
+        {
+        }
+
+        public override void Update()
+        {
+            int factor = 90;
+
+            if (Input.GetKey(Key.Up))
+                this.Transform.EulerAngles += new Vector3(0, 0, 1) * Time.DeltaTime * factor;
+            //this.Transform.Translate(Vector3.ForwardLH); 
+            else if (Input.GetKey(Key.Down))
+                //this.Transform.Translate(Vector3.BackwardLH);
+                this.Transform.EulerAngles += new Vector3(0, 0, -1) * Time.DeltaTime * factor;
+
+
+            if (Input.GetKey(Key.Left))
+                //this.Transform.Translate(Vector3.Left);
+                this.Transform.EulerAngles += new Vector3(0, -1, 0) * Time.DeltaTime * factor;
+            else if (Input.GetKey(Key.Right))
+                //this.Transform.Translate(Vector3.Right);
+                this.Transform.EulerAngles += new Vector3(0, 1, 0) * Time.DeltaTime * factor;
+
+            this.engine.GraphicsServices.GetService<RenderForm>().Text = this.Transform.Forward.ToString();
+        }
+    }
+
     public class CameraMovementScript : Component
     {
         private float speed = 3f;
@@ -150,11 +189,6 @@ namespace NGine_CLI
                 this.Transform.LocalPosition += Vector3.Up * speed * Time.DeltaTime;
             if (Input.GetKey(Key.LeftControl))
                 this.Transform.LocalPosition += Vector3.Down * speed * Time.DeltaTime;
-
-            if (Input.GetKeyDown(Key.Up))
-                this.Transform.EulerAngles += Vector3.UnitX * rotateAmount;
-            if (Input.GetKeyDown(Key.Down))
-                this.Transform.EulerAngles -= Vector3.UnitX * rotateAmount;
         }
     }
 }

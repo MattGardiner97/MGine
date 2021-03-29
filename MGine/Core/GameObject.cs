@@ -1,4 +1,7 @@
 ﻿using MGine.Components;
+using MGine.Enum;
+using MGine.Services;
+using MGine.Structures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +17,7 @@ namespace MGine.Core
 
         public string Name { get; set; }
         public Transform Transform { get; private set; }
+        public Layer Category { get; set; }
 
         internal GameObject(Engine Engine)
         {
@@ -21,6 +25,7 @@ namespace MGine.Core
             this.components = new Dictionary<Type, Component>();
 
             this.Transform = new Transform();
+            this.Category = engine.Services.GetService<LayerService>().Default;
         }
 
         public void Update()
@@ -35,9 +40,13 @@ namespace MGine.Core
         public TComponent AddComponent<TComponent>() where TComponent : Component
         {
             if (components.ContainsKey(typeof(TComponent)))
-                return default(TComponent);
+                throw new ArgumentException($"Component '{typeof(TComponent).FullName}' has already been registered");
 
             var newComponent = (TComponent)Activator.CreateInstance(typeof(TComponent),new object[] { this, engine});
+
+            if (newComponent is Light)
+                engine.Services.GetService<LightService>().RegisterLight(newComponent as Light);
+
             components.Add(typeof(TComponent), newComponent);
 
             newComponent.Start();

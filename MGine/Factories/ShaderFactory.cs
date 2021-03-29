@@ -1,13 +1,12 @@
 ﻿using MGine.Core;
 using MGine.Interfaces;
-using MGine.ShaderDefinitions;
+using MGine.Services;
 using MGine.Shaders;
+using MGine.Shaders.ShaderDefinitions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MGine.Factories
 {
@@ -36,7 +35,7 @@ namespace MGine.Factories
 
             var shaderDefinition = Activator.CreateInstance<TShaderDefinition>();
             var newShader = (TShader)Activator.CreateInstance(typeof(TShader),new object[] { shaderDefinition, engine });
-            newShader.Init(engine.GraphicsServices.GetService<RenderService>());
+            newShader.Init(engine.Services.GetService<RenderService>());
 
             shaders.Add(typeof(TShader), newShader);
             AllShaders = new ReadOnlyCollection<Shader>(shaders.Values.ToArray());

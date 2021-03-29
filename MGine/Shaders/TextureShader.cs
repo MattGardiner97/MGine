@@ -1,5 +1,6 @@
 ﻿using MGine.Core;
-using MGine.ShaderDefinitions;
+using MGine.Services;
+using MGine.Shaders.ShaderDefinitions;
 using System;
 using System.Collections.Generic;
 using System.Linq;

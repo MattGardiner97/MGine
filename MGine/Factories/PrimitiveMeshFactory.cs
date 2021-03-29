@@ -92,76 +92,77 @@ namespace MGine.Factories
 
             Vector3[] normals = new Vector3[]
             {
-                //new Vector3(-1f,-1f,-1f), //Rear Bottom left
-                //new Vector3(-1f,-1f,1f), //Front bottom left
-                //new Vector3(1f,-1f,1f), //Front bottom right
-                //new Vector3(1f,-1f,-1f), //Rear bottom right
+                //Bottom Face
+                new Vector3(-1f,-1f,-1f), //Rear Bottom left
+                new Vector3(-1f,-1f,1f), //Front bottom left
+                new Vector3(1f,-1f,1f), //Front bottom right
+                new Vector3(1f,-1f,-1f), //Rear bottom right
 
-                ////Top Face
-                //new Vector3(-1f,1f,-1f), //Rear top left
-                //new Vector3(-1f,1f,1f), //Front top left
-                //new Vector3(1f,1f,1f), //Front top right
-                //new Vector3(1f,1f,-1f), //Rear top right
+                //Top Face
+                new Vector3(-1f,1f,-1f), //Rear top left
+                new Vector3(-1f,1f,1f), //Front top left
+                new Vector3(1f,1f,1f), //Front top right
+                new Vector3(1f,1f,-1f), //Rear top right
 
-                ////Left Face
-                //new Vector3(-1f,-1f,1f),
-                //new Vector3(-1f,1f,1f),
-                //new Vector3(-1f,1f,-1f),
-                //new Vector3(-1f,-1f,-1f),
-
-                ////Right face
-                //new Vector3(1f,-1f,1f),
-                //new Vector3(1f,1f,1f),
-                //new Vector3(1f,1f,-1f),
-                //new Vector3(1f,-1f,-1f),
-
-                ////Back face
-                //new Vector3(-1f,-1f,-1f),
-                //new Vector3(-1f,1f,-1f),
-                //new Vector3(1f,1f,-1f),
-                //new Vector3(1f,-1f,-1f),
-
-                ////Front face
-                //new Vector3(-1f,-1f,1f),
-                //new Vector3(-1f,1f,1f),
-                //new Vector3(1f,1f,1f),
-                //new Vector3(1f,-1f,1f),
-
-                //Bottom face
-                new Vector3(0,-1,0),
-                new Vector3(0,-1,0),
-                new Vector3(0,-1,0),
-                new Vector3(0,-1,0),
-
-                //Top face
-                new Vector3(0,1,0),
-                new Vector3(0,1,0),
-                new Vector3(0,1,0),
-                new Vector3(0,1,0),
-
-                //Left face
-                new Vector3(-1,0,0),
-                new Vector3(-1,0,0),
-                new Vector3(-1,0,0),
-                new Vector3(-1,0,0),
+                //Left Face
+                new Vector3(-1f,-1f,1f),
+                new Vector3(-1f,1f,1f),
+                new Vector3(-1f,1f,-1f),
+                new Vector3(-1f,-1f,-1f),
 
                 //Right face
-                new Vector3(1,0,0),
-                new Vector3(1,0,0),
-                new Vector3(1,0,0),
-                new Vector3(1,0,0),
+                new Vector3(1f,-1f,1f),
+                new Vector3(1f,1f,1f),
+                new Vector3(1f,1f,-1f),
+                new Vector3(1f,-1f,-1f),
 
                 //Back face
-                new Vector3(0,0,-1),
-                new Vector3(0,0,-1),
-                new Vector3(0,0,-1),
-                new Vector3(0,0,-1),
+                new Vector3(-1f,-1f,-1f),
+                new Vector3(-1f,1f,-1f),
+                new Vector3(1f,1f,-1f),
+                new Vector3(1f,-1f,-1f),
 
                 //Front face
-                new Vector3(0,0,1),
-                new Vector3(0,0,1),
-                new Vector3(0,0,1),
-                new Vector3(0,0,1)
+                new Vector3(-1f,-1f,1f),
+                new Vector3(-1f,1f,1f),
+                new Vector3(1f,1f,1f),
+                new Vector3(1f,-1f,1f),
+
+                ////Bottom face
+                //new Vector3(0,-1,0),
+                //new Vector3(0,-1,0),
+                //new Vector3(0,-1,0),
+                //new Vector3(0,-1,0),
+
+                ////Top face
+                //new Vector3(0,1,0),
+                //new Vector3(0,1,0),
+                //new Vector3(0,1,0),
+                //new Vector3(0,1,0),
+
+                ////Left face
+                //new Vector3(-1,0,0),
+                //new Vector3(-1,0,0),
+                //new Vector3(-1,0,0),
+                //new Vector3(-1,0,0),
+
+                ////Right face
+                //new Vector3(1,0,0),
+                //new Vector3(1,0,0),
+                //new Vector3(1,0,0),
+                //new Vector3(1,0,0),
+
+                ////Back face
+                //new Vector3(0,0,-1),
+                //new Vector3(0,0,-1),
+                //new Vector3(0,0,-1),
+                //new Vector3(0,0,-1),
+
+                ////Front face
+                //new Vector3(0,0,1),
+                //new Vector3(0,0,1),
+                //new Vector3(0,0,1),
+                //new Vector3(0,0,1)
             };
 
             Mesh result = new Mesh(engine)

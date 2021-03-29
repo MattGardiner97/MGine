@@ -5,17 +5,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MGine.Structures
+namespace MGine.Shaders.ShaderStructures
 {
     public struct PerObjectCB
     {
+        public Matrix WorldViewProjection;
+        public Matrix World;
+
         public PerObjectCB(Matrix WorldViewProjection,Matrix World)
         {
             this.WorldViewProjection = WorldViewProjection;
             this.World = World;
         }
-
-        public Matrix WorldViewProjection;
-        public Matrix World;
     }
 }

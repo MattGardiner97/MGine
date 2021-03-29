@@ -13,6 +13,7 @@ namespace MGine.Factories
     public class BufferFactory : IService
     {
         private Engine engine;
+        private List<Buffer> createBuffers = new List<Buffer>();
 
         public BufferFactory(Engine Engine)
         {
@@ -20,7 +21,11 @@ namespace MGine.Factories
         }
 
         public void Init() { }
-        public void Dispose() { }
+        public void Dispose()
+        {
+            foreach (Buffer buffer in createBuffers)
+                buffer.Dispose();
+        }
 
         public Buffer CreateConstantBuffer<TBufferStruct>() where TBufferStruct : struct
         {
@@ -39,6 +44,8 @@ namespace MGine.Factories
                 ResourceOptionFlags.None,
                 StructSize
                 );
+
+            createBuffers.Add(result);
 
             return result;
         }

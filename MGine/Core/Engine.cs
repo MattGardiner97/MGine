@@ -2,6 +2,7 @@
 using MGine.Factories;
 using MGine.Interfaces;
 using MGine.Materials;
+using MGine.Services;
 using MGine.Shaders;
 using MGine.Structures;
 using SharpDX.Windows;
@@ -52,6 +53,9 @@ namespace MGine.Core
             Services.RegisterService<MaterialFactory>();
             Services.RegisterService<TextureFactory>();
             Services.RegisterService<BufferFactory>();
+            Services.RegisterService<LightService>();
+            Services.RegisterService<LayerService>();
+            Services.RegisterService<RenderService>();
         }
 
         public void RegisterShaderMaterialGrouping(Shader OldShader, Shader NewShader, Material Material)

@@ -1,21 +1,19 @@
-﻿using MGine.ShaderDefinitions;
-using SharpDX.Direct3D11;
-using SharpDX.DXGI;
+﻿using SharpDX.Direct3D11;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SharpDX.D3DCompiler;
 using Device = SharpDX.Direct3D11.Device;
-using SharpDX.Direct3D11;
 using MGine.Core;
 using MGine.Exceptions;
+using MGine.Services;
+using MGine.Shaders.ShaderDefinitions;
+using System.Collections.Generic;
 
 namespace MGine.Shaders
 {
     public abstract class Shader : IDisposable
     {
+        private Dictionary<string, int> constantBufferSlots = new Dictionary<string, int>();
+
         protected Engine engine;
 
         public InputLayout InputLayout { get; private set; }
@@ -48,6 +46,17 @@ namespace MGine.Shaders
                 ShaderSignature.GetInputSignature(VertexShaderCompilationResult.Bytecode),
                 ShaderDefinition.GetInputElements());
             this.InputElementStride = ShaderDefinition.GetInputElementStride();
+
+            string[] cbNames = ShaderDefinition.GetConstantBufferNames();
+            for(int i = 0; i < cbNames.Length;i++)
+            {
+                constantBufferSlots.Add(cbNames[i], i);
+            }
+        }
+
+        public int GetConstantBufferSlot(string ConstantBufferName)
+        {
+            return constantBufferSlots[ConstantBufferName];
         }
 
         private CompilationResult CompileVertexShader(string Filename, string EntryPoint)

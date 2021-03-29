@@ -1,13 +1,16 @@
-﻿using System;
+﻿using SharpDX;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MGine.Structures
+namespace MGine.Shaders.ShaderStructures
 {
     public struct PerFrameCB
     {
-        public Light Light;
+        public Vector3 CameraPosition;
+        public float pad0;
+
     }
 }

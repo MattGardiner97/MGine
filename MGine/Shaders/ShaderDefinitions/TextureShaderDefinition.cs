@@ -5,10 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MGine.ShaderDefinitions
+namespace MGine.Shaders.ShaderDefinitions
 {
     public class TextureShaderDefinition : ShaderDefinition
     {
+        public override string[] GetConstantBufferNames()
+        {
+            throw new NotImplementedException();
+        }
+
         public override InputElement[] GetInputElements()
         {
             return new InputElement[]

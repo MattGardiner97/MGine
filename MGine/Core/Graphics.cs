@@ -17,6 +17,11 @@ using MGine.Factories;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using MGine.Structures;
 using MGine.Interfaces;
+using MGine.Services;
+using MGine.Enum;
+using MGine.Shaders.ShaderStructures;
+
+using PointLightStructure = MGine.Shaders.ShaderStructures.PointLightStructure;
 
 namespace MGine.Core
 {
@@ -36,29 +41,20 @@ namespace MGine.Core
         private RenderForm renderForm;
         private RasterizerState renderState;
 
-        //Shadow mapping
-        private Texture2D shadowDepthBuffer;
-        private DepthStencilView shadowDepthStencilView;
-        private ShaderResourceView shadowShaderResourceView;
-        private SamplerState shadowComparisonSamplerState;
-        private RasterizerState shadowRenderState;
-        private Viewport shadowViewport;
-
-
-        private Light light;
-        private Buffer perObjectBuffer;
         private Buffer perFrameBuffer;
-        private Buffer lightBuffer;
-        private Matrix lightMatrix;
+        private Buffer perObjectBuffer;
+        private Buffer PointLightBuffer;
+        private Buffer DirectionalLightBuffer;
+
+        private PointLightStructure[] pointLights = new PointLightStructure[Constants.MaxLightCounts.POINT];
+        private DirectionalLightStructure[] directionalLights = new DirectionalLightStructure[Constants.MaxLightCounts.DIRECTIONAL];
 
         private int width;
         private int height;
         private float aspectRatio;
-        private int shadowMapWidth = 800;
-        private int shadowMapHeight = 800;
 
         private RenderService renderService;
-
+        private LightService lightService;
 
         public Graphics(Engine Engine, int Width, int Height)
         {
@@ -69,8 +65,7 @@ namespace MGine.Core
 
             renderForm = new RenderForm()
             {
-                Width = width,
-                Height = height
+                ClientSize = new System.Drawing.Size(Width, Height)
             };
         }
 
@@ -78,19 +73,20 @@ namespace MGine.Core
         {
             //Use reflection to dispose all IDisposable private fields
             var fields = typeof(Graphics).GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            foreach(var fieldInfo in fields)
+            foreach (var fieldInfo in fields)
             {
                 if (fieldInfo.FieldType == typeof(Engine))
                     continue;
 
-                var disposeMethod  = fieldInfo.FieldType.GetMethod("Dispose");
-                if (disposeMethod!= null)
-                    disposeMethod.Invoke(fieldInfo.GetValue(this),null);
+                var disposeMethod = fieldInfo.FieldType.GetMethod("Dispose");
+                if (disposeMethod != null)
+                    disposeMethod.Invoke(fieldInfo.GetValue(this), null);
             }
         }
 
         public void Init()
         {
+            #region Device Setup
             CreateDeviceAndSwapChain();
             deviceContext = device.ImmediateContext;
 
@@ -98,7 +94,6 @@ namespace MGine.Core
 
             this.backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0);
             renderTargetView = new RenderTargetView(device, backBuffer);
-            //this.backBuffer.Dispose();
 
             deviceContext.OutputMerger.SetRenderTargets(renderTargetView);
 
@@ -136,96 +131,27 @@ namespace MGine.Core
             depthStencilView = new DepthStencilView(device, depthBuffer);
             deviceContext.OutputMerger.SetTargets(depthStencilView, renderTargetView);
             deviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
+            #endregion
 
-            shadowDepthBuffer = new Texture2D(device, new Texture2DDescription()
-            {
-                Format = Format.R24G8_Typeless,
-                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
-                MipLevels = 1,
-                ArraySize = 1,
-                SampleDescription = new SampleDescription() { Count = 1 },
-                Height = shadowMapHeight,
-                Width = shadowMapWidth,
-            });
-
-            shadowDepthStencilView = new DepthStencilView(device, shadowDepthBuffer, new DepthStencilViewDescription()
-            {
-                Format = Format.D24_UNorm_S8_UInt,
-                Dimension = DepthStencilViewDimension.Texture2D,
-                Texture2D = new DepthStencilViewDescription.Texture2DResource() { MipSlice = 0}
-            });
-
-            shadowShaderResourceView = new ShaderResourceView(device, shadowDepthBuffer, new ShaderResourceViewDescription()
-            {
-                Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D,
-                Format = Format.R24_UNorm_X8_Typeless,
-                Texture2D = new ShaderResourceViewDescription.Texture2DResource() { MipLevels = 1 }
-            });
-
-            shadowComparisonSamplerState = new SamplerState(this.device, new SamplerStateDescription()
-            {
-                AddressU = TextureAddressMode.Border,
-                AddressV = TextureAddressMode.Border,
-                AddressW = TextureAddressMode.Border,
-                BorderColor = new SharpDX.Mathematics.Interop.RawColor4(1, 1, 1, 1),
-                MinimumLod = 0.0f,
-                MaximumLod = float.MaxValue,
-                MipLodBias = 0.0f,
-                MaximumAnisotropy = 0,
-                ComparisonFunction = Comparison.LessEqual,
-                Filter = Filter.ComparisonMinMagMipPoint
-
-            });
-
-            shadowRenderState = new RasterizerState(device, new RasterizerStateDescription()
-            {
-                CullMode = CullMode.Front,
-                FillMode = FillMode.Solid,
-                IsDepthClipEnabled = true
-            });
-
-            lightMatrix = Matrix.Translation(0, 2, -2) 
-                * Matrix.LookAtLH(new Vector3(0, 2, -2), Vector3.Zero, Vector3.UnitY) 
-                * Matrix.PerspectiveFovLH(MathF.PI / 2, 1f, 12f, 50f);
-            lightMatrix.Transpose();
-            lightBuffer = Buffer.Create(device, ref lightMatrix, new BufferDescription()
-            {
-                BindFlags = BindFlags.ConstantBuffer,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
-                SizeInBytes = SharpDX.Utilities.SizeOf<Matrix>(),
-                StructureByteStride = SharpDX.Utilities.SizeOf<Matrix>(),
-                Usage = ResourceUsage.Default
-            });
-            deviceContext.UpdateSubresource(ref lightMatrix, lightBuffer);
-            shadowViewport = new Viewport(0, 0, shadowMapWidth, shadowMapHeight, 0f, 1f);
-
-            renderForm.Show();
             RegisterServices();
 
+            this.renderService = engine.Services.GetService<RenderService>();
+            this.lightService = engine.Services.GetService<LightService>();
+
             renderService.Init();
-
-
 
             //Constant Buffers
             perFrameBuffer = engine.Services.GetService<BufferFactory>().CreateConstantBuffer<PerFrameCB>();
             perObjectBuffer = engine.Services.GetService<BufferFactory>().CreateConstantBuffer<PerObjectCB>();
+            PointLightBuffer = engine.Services.GetService<BufferFactory>().CreateConstantBuffer(SharpDX.Utilities.SizeOf<PointLightStructure>() * Constants.MaxLightCounts.POINT);
+            DirectionalLightBuffer = engine.Services.GetService<BufferFactory>().CreateConstantBuffer(SharpDX.Utilities.SizeOf<DirectionalLightStructure>() * Constants.MaxLightCounts.DIRECTIONAL);
+            
+            renderService.RegisterConstantBuffer(Constants.ConstantBufferNames.PER_FRAME_CB, perFrameBuffer, ConstantBufferType.PixelShader);
+            renderService.RegisterConstantBuffer(Constants.ConstantBufferNames.POINT_LIGHT_CB, PointLightBuffer, ConstantBufferType.PixelShader);
+            renderService.RegisterConstantBuffer(Constants.ConstantBufferNames.DIRECTIONAL_LIGHT_CB, DirectionalLightBuffer, ConstantBufferType.PixelShader);
+            renderService.RegisterConstantBuffer(Constants.ConstantBufferNames.PER_OBJECT_CB, perObjectBuffer, ConstantBufferType.VertexShader);
 
-            renderService.RegisterConstantBuffer(Constants.ConstantBufferNames.PER_FRAME_CB, perFrameBuffer, Enum.ConstantBufferType.PixelShader);
-            renderService.RegisterConstantBuffer(Constants.ConstantBufferNames.PER_OBJECT_CB, perObjectBuffer, Enum.ConstantBufferType.VertexShader);
-            renderService.RegisterConstantBuffer(Constants.ConstantBufferNames.LIGHT_CB, lightBuffer, Enum.ConstantBufferType.VertexShader);
-
-            light = new Light()
-            {
-                Direction = new Vector3(0.5f, -1, 1),
-                Ambient = new Vector4(0.2f, 0.2f, 0.2f, 1),
-                Diffuse = new Vector4(1f, 1f, 1f, 1f)
-            };
-            PerFrameCB perFrameStruct = new PerFrameCB()
-            {
-                Light = light
-            };
-            deviceContext.UpdateSubresource(ref perFrameStruct, perFrameBuffer);
+            renderForm.Show();
         }
 
         private void CreateDeviceAndSwapChain()
@@ -244,7 +170,11 @@ namespace MGine.Core
 
             this.device = null;
             this.swapChain = null;
+#if DEBUG
             Device.CreateWithSwapChain(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.Debug | DeviceCreationFlags.BgraSupport, swapChainDescription, out device, out swapChain);
+#else
+            Device.CreateWithSwapChain(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, swapChainDescription, out device, out swapChain);
+#endif
         }
 
         private void RegisterServices()
@@ -252,93 +182,93 @@ namespace MGine.Core
             engine.GraphicsServices.RegisterService(renderForm);
             engine.GraphicsServices.RegisterService(device);
             engine.GraphicsServices.RegisterService(deviceContext);
-            this.renderService = engine.GraphicsServices.RegisterService<RenderService>();
         }
 
         public void Render()
         {
-            //Render shadows
-            RenderShadows();
+            UpdatePerFrameBuffer();
+
+            UpdateLightBuffers();
 
             //Clear targets
             deviceContext.ClearDepthStencilView(depthStencilView, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1, 0);
             deviceContext.ClearRenderTargetView(renderTargetView, Color.Gray);
-            
+
             //Camera matrix calulcations
             Transform cameraTransform = engine.MainCamera.Transform;
             Matrix viewMatrix = Matrix.LookAtLH(cameraTransform.WorldPosition, (cameraTransform.Forward + cameraTransform.WorldPosition), Vector3.UnitY);
             Matrix projectionMatrix = Matrix.PerspectiveFovLH((float)((Math.PI / 4)), aspectRatio, 0.01f, 200f);
-
-            
 
             IEnumerable<Shader> shaders = engine.ShaderMaterialGroupings.Keys;
             foreach (Shader shader in shaders)
             {
                 shader.BeginRender(renderService);
 
-                //Set per-frame buffer (ambient lighting?)
-                renderService.SetConstantBuffer(Constants.ConstantBufferNames.PER_FRAME_CB, 0);
-                renderService.SetConstantBuffer(Constants.ConstantBufferNames.LIGHT_CB, 2);
-                renderService.UpdateConstantBuffer(Constants.ConstantBufferNames.LIGHT_CB, ref lightMatrix);
+                //Set per-frame and light buffers (camera position)
+                renderService.SetConstantBuffer(Constants.ConstantBufferNames.PER_FRAME_CB, shader);
+                renderService.SetConstantBuffer(Constants.ConstantBufferNames.POINT_LIGHT_CB, shader);
+                renderService.SetConstantBuffer(Constants.ConstantBufferNames.DIRECTIONAL_LIGHT_CB, shader);
 
                 IEnumerable<Material> materials = engine.MaterialRendererGroupings.Keys;
                 foreach (Material material in materials)
                 {
                     material.BeginRender(renderService);
 
-
                     IEnumerable<MeshRenderer> meshRenderers = engine.MaterialRendererGroupings[material];
                     foreach (MeshRenderer renderer in meshRenderers)
                     {
-                        Matrix wvpMatrix = renderer.GameObject.Transform.WorldMatrix * viewMatrix * projectionMatrix;
-                        wvpMatrix.Transpose();
-                        Matrix worldMatrix = renderer.GameObject.Transform.WorldMatrix;
-                        worldMatrix.Transpose();
-                        PerObjectCB perObjectCB = new PerObjectCB(wvpMatrix, worldMatrix);
-                        renderService.SetConstantBuffer(Constants.ConstantBufferNames.PER_OBJECT_CB, 1);
+                        PerObjectCB perObjectCB = UpdateWorldMatrices(renderer.Transform.WorldMatrix, viewMatrix, projectionMatrix);
+
+                        renderService.SetConstantBuffer(Constants.ConstantBufferNames.PER_OBJECT_CB, shader);
                         renderService.UpdateConstantBuffer(Constants.ConstantBufferNames.PER_OBJECT_CB, ref perObjectCB);
 
-                        deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(renderer.Mesh.VertexBuffer,shader.InputElementStride,0));
+                        deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(renderer.Mesh.VertexBuffer, shader.InputElementStride, 0));
                         deviceContext.InputAssembler.SetIndexBuffer(renderer.Mesh.IndexBuffer, Format.R32_UInt, 0);
 
                         deviceContext.DrawIndexed(renderer.Mesh.Indices.Length, 0, 0);
                     }
                 }
-
             }
 
             swapChain.Present(1, PresentFlags.None);
         }
 
-        public void RenderShadows()
+        private PerObjectCB UpdateWorldMatrices(Matrix WorldMatrix, Matrix ViewMatrix, Matrix ProjMatrix)
         {
-            deviceContext.ClearDepthStencilView(shadowDepthStencilView, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1, 0);
+            Matrix wvpMatrix = WorldMatrix * ViewMatrix * ProjMatrix;
+            Matrix worldMatrix = WorldMatrix;
 
-            deviceContext.OutputMerger.SetRenderTargets(shadowDepthStencilView, renderTargetView: null);
+            wvpMatrix.Transpose();
+            worldMatrix.Transpose();
 
-            deviceContext.Rasterizer.State = shadowRenderState;
-            deviceContext.Rasterizer.SetViewport(shadowViewport);
+            PerObjectCB result = new PerObjectCB(wvpMatrix, worldMatrix);
+            return result;
+        }
 
-            Shader shadowShader = engine.Services.GetService<ShaderFactory>().GetShader<ShadowShader>();
-            shadowShader.BeginRender(renderService);
-            deviceContext.VertexShader.SetConstantBuffer(1, lightBuffer);
-            deviceContext.UpdateSubresource(ref lightMatrix, lightBuffer);
-            
-            foreach(var _shader in engine.ShaderMaterialGroupings.Keys)
+        private void UpdateLightBuffers()
+        {
+            if (lightService.PointLightUpdated)
             {
-                foreach(var _material in engine.ShaderMaterialGroupings[_shader])
-                {
-                    foreach(var _renderer in engine.MaterialRendererGroupings[_material])
-                    {
-                        deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(_renderer.Mesh.VertexBuffer, shadowShader.InputElementStride, 0));
-                        deviceContext.InputAssembler.SetIndexBuffer(_renderer.Mesh.IndexBuffer, Format.R32_UInt, 0);
-                        deviceContext.InputAssembler.InputLayout = shadowShader.InputLayout;
-                    }
-                }
+                var lightArray = lightService.PointLightStructures;
+                renderService.UpdateConstantBuffer(Constants.ConstantBufferNames.POINT_LIGHT_CB, lightArray);
+                lightService.ResetPointLight();
+            }
+            if(lightService.DirectionalLightUpdated)
+            {
+                var lightArray = lightService.DirectionalLightStructures;
+                renderService.UpdateConstantBuffer(Constants.ConstantBufferNames.DIRECTIONAL_LIGHT_CB, lightArray);
+                lightService.ResetDirectionalLight();
             }
         }
 
+        private void UpdatePerFrameBuffer()
+        {
+            PerFrameCB frameCB = new PerFrameCB()
+            {
+                CameraPosition = engine.MainCamera.Transform.WorldPosition
+            };
 
-
+            renderService.UpdateConstantBuffer(Constants.ConstantBufferNames.PER_FRAME_CB, ref frameCB);
+        }
     }
 }

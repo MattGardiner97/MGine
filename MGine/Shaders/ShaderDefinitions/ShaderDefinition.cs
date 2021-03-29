@@ -6,13 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MGine.ShaderDefinitions
+namespace MGine.Shaders.ShaderDefinitions
 {
     public abstract class ShaderDefinition
     {
         public abstract InputElement[] GetInputElements();
         public abstract (string Filename, string EntryPoint) GetVertexShaderDetails();
         public abstract (string Filename, string EntryPoint) GetPixelShaderDetails();
+        public abstract string[] GetConstantBufferNames();
 
         public int GetInputElementStride()
         {
